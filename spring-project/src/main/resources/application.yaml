@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: spring-project
+  datasource:
+    url: jdbc:postgresql://db.vvepoqajutaptblgbhld.supabase.co:5432/postgres
+    port: 5432
+    username: postgres
+    password: j5wNxZFY#q%NUvR
+  jpa:
+    hibernate:
+      properties:
+        hibernate:
+          dialect: org.hibernate.dialect.PostgreSQLDialect
+
+
