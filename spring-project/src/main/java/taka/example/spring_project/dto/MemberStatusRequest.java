@@ -1,6 +1,8 @@
 package taka.example.spring_project.dto;
 
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +15,9 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class MemberStatusRequest {
+    @NotNull
     private UUID userId;
+
+    @NotBlank
     private String orderNumber;
 }

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import taka.example.spring_project.dto.MemberStatusResponse;
 import taka.example.spring_project.entity.MemberStatus;
 import taka.example.spring_project.entity.OrderHistory;
+import taka.example.spring_project.exception.NotFoundException;
 import taka.example.spring_project.repository.MemberStatusRepository;
 import taka.example.spring_project.repository.OrderRepository;
 
@@ -27,7 +28,7 @@ public class MemberStatusService {
     @Transactional
     public MemberStatusResponse calculateAndUpdateMemberStatus(UUID userId, String orderNumber) {
         OrderHistory order = orderRepository.findByOrderNumber(orderNumber)
-                .orElseThrow(() -> new RuntimeException("Order not found for order number: " + orderNumber));
+                .orElseThrow(() -> new NotFoundException("Order not found for order number: " + orderNumber));
 
         if (!order.getUserId().equals(userId)) {
             throw new IllegalArgumentException("Order does not belong to user: " + orderNumber);
@@ -67,7 +68,7 @@ public class MemberStatusService {
 
     public MemberStatusResponse getMemberStatus(UUID userId) {
         MemberStatus memberStatus = memberStatusRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("User not found for id: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found for id: " + userId));
         return new MemberStatusResponse(userId, memberStatus.getTotalPoints(), memberStatus.getRank());
     }
 }
