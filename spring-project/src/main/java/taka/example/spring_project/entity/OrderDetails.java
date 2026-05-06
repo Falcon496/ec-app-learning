@@ -36,11 +36,11 @@ public class OrderDetails {
     private Integer price;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    @UpdateTimestamp
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    @CreationTimestamp
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
 }
