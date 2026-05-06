@@ -14,7 +14,7 @@ import taka.example.spring_project.repository.OrderRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -71,9 +71,18 @@ public class OrderService {
     public OrderHistoryResponse getOrderHistory(UUID userId,int page, int pageSize) {
         PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.by(Sort.Direction.DESC, "orderDate"));
         Page<OrderHistory> orderHistoryPage = orderRepository.findByUserId(userId, pageRequest);
+        List<OrderHistory> orderHistories = orderHistoryPage.getContent();
+        Map<String, List<OrderDetails>> orderDetailsByOrderNumber = orderDetailsRepository.findByOrderNumberIn(
+                        orderHistories.stream()
+                                .map(OrderHistory::getOrderNumber)
+                                .toList())
+                .stream()
+                .collect(Collectors.groupingBy(OrderDetails::getOrderNumber));
 
-        List<OrderDto> orderDtos = orderHistoryPage.getContent().stream()
-                .map(this::convertToOrderDto)
+        List<OrderDto> orderDtos = orderHistories.stream()
+                .map(orderHistory -> convertToOrderDto(
+                        orderHistory,
+                        orderDetailsByOrderNumber.getOrDefault(orderHistory.getOrderNumber(), List.of())))
                 .toList();
 
         PageableDto pageableDto = new PageableDto(
@@ -86,8 +95,7 @@ public class OrderService {
         return new OrderHistoryResponse(orderDtos, pageableDto);
     }
 
-    private OrderDto convertToOrderDto(OrderHistory orderHistory) {
-        List<OrderDetails> orderDetails = orderDetailsRepository.findByOrderNumber(orderHistory.getOrderNumber());
+    private OrderDto convertToOrderDto(OrderHistory orderHistory, List<OrderDetails> orderDetails) {
         List<OrderItem> orderItems = orderDetails.stream()
                 .map(this::convertToOrderItem)
                 .toList();
