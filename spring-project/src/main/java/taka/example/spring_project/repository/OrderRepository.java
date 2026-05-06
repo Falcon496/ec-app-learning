@@ -20,7 +20,9 @@ public interface OrderRepository extends JpaRepository<OrderHistory, String> {
     // Add findByUserId
     Page<OrderHistory> findByUserId(UUID userId, Pageable pageable);
 
-    // Add sumPointsForUserSince method
-    @Query("SELECT SUM(o.totalPrice) / 100 FROM OrderHistory o WHERE o.userId = :userId AND o.orderDate >= :since")
-    int sumPointsForUserSince(@Param("userId") UUID userId, @Param("since") LocalDateTime since);
+    @Query("SELECT COALESCE(SUM(o.earnedPoints), 0) FROM OrderHistory o WHERE o.userId = :userId")
+    int sumEarnedPointsByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT COALESCE(SUM(o.earnedPoints), 0) FROM OrderHistory o WHERE o.userId = :userId AND o.orderDate >= :since")
+    int sumEarnedPointsForUserSince(@Param("userId") UUID userId, @Param("since") LocalDateTime since);
 }
