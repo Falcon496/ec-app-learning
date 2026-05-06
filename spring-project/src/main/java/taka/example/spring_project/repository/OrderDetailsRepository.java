@@ -11,4 +11,6 @@ public interface OrderDetailsRepository extends JpaRepository<OrderDetails, Long
 
     // Add findByOrderNumber method to find order details by order number
     List<OrderDetails> findByOrderNumber(String orderNumber);
+
+    List<OrderDetails> findByOrderNumberIn(List<String> orderNumbers);
 }
