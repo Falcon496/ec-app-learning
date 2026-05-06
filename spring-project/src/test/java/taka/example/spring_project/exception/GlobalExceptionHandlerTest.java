@@ -14,7 +14,10 @@ class GlobalExceptionHandlerTest {
         var response = handler.handleNotFoundException(new NotFoundException("not found"));
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("NOT_FOUND", response.getBody().code());
+        assertEquals(HttpStatus.NOT_FOUND.value(), response.getBody().getStatus());
+        assertEquals("NOT_FOUND", response.getBody().getTitle());
+        assertEquals("not found", response.getBody().getDetail());
+        assertEquals("NOT_FOUND", response.getBody().getProperties().get("code"));
     }
 
     @Test
@@ -22,6 +25,9 @@ class GlobalExceptionHandlerTest {
         var response = handler.handleIllegalArgumentException(new IllegalArgumentException("bad request"));
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("BAD_REQUEST", response.getBody().code());
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getBody().getStatus());
+        assertEquals("BAD_REQUEST", response.getBody().getTitle());
+        assertEquals("bad request", response.getBody().getDetail());
+        assertEquals("BAD_REQUEST", response.getBody().getProperties().get("code"));
     }
 }
