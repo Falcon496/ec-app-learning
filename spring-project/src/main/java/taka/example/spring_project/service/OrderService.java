@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -34,15 +33,17 @@ public class OrderService {
     public OrderResponse createOrder(OrderRequest orderRequest) {
         String orderNumber = generateOrderNumber();
         LocalDateTime orderDateTime = LocalDateTime.now();
+        Integer totalPrice = calculateTotalPrice(orderRequest.getOrderItems());
+        Integer totalQuantity = calculateTotalQuantity(orderRequest.getOrderItems());
 
         OrderHistory orderHistory = OrderHistory.builder()
                 .orderNumber(orderNumber)
                 .orderDate(orderDateTime)
                 .userId(orderRequest.getUserId())
                 .userName(orderRequest.getUserName())
-                .totalPrice(orderRequest.getTotalPrice())
-                .totalQuantity(orderRequest.getTotalQuantity())
-                .earnedPoints(calculatePoints(orderRequest.getTotalPrice()))
+                .totalPrice(totalPrice)
+                .totalQuantity(totalQuantity)
+                .earnedPoints(calculatePoints(totalPrice))
                 .build();
         orderRepository.save(orderHistory);
 
@@ -62,6 +63,16 @@ public class OrderService {
     private Integer calculatePoints(Integer totalPrice) {
 //        Calculate 1%
         return totalPrice / 100;
+    }
+
+    private Integer calculateTotalPrice(List<OrderItem> orderItems) {
+        return orderItems.stream()
+                .mapToInt(OrderItem::getPrice)
+                .sum();
+    }
+
+    private Integer calculateTotalQuantity(List<OrderItem> orderItems) {
+        return orderItems.size();
     }
 
     private String generateOrderNumber() {
