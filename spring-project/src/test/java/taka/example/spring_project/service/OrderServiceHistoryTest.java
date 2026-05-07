@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
@@ -71,7 +71,7 @@ class OrderServiceHistoryTest {
         OrderHistoryResponse response = orderService.getOrderHistory(userId, 0, 10).block();
 
         assertEquals(2, response.getContent().size());
-        assertEquals(firstOrder.getOrderDate().atOffset(ZoneOffset.UTC), response.getContent().get(0).getOrderDate());
+        assertEquals(firstOrder.getOrderDate(), response.getContent().get(0).getOrderDate());
         assertEquals(1, response.getContent().get(0).getOrderItems().size());
         assertEquals(1, response.getContent().get(1).getOrderItems().size());
         ArgumentCaptor<List<String>> captor = ArgumentCaptor.forClass(List.class);
@@ -82,7 +82,7 @@ class OrderServiceHistoryTest {
     private OrderHistory orderHistory(String orderNumber, UUID userId) {
         return OrderHistory.builder()
                 .orderNumber(orderNumber)
-                .orderDate(LocalDateTime.now())
+                .orderDate(OffsetDateTime.now(FIXED_CLOCK))
                 .userId(userId)
                 .userName("test-user")
                 .totalPrice(1000)

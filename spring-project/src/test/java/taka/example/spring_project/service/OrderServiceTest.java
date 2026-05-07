@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
@@ -78,7 +78,7 @@ class OrderServiceTest {
         ArgumentCaptor<OrderHistory> orderCaptor = ArgumentCaptor.forClass(OrderHistory.class);
         verify(orderHistoryCommandRepository).insert(orderCaptor.capture());
         assertEquals("SUCCESS", response.getStatus());
-        assertEquals(LocalDateTime.ofInstant(FIXED_INSTANT, ZoneOffset.UTC), orderCaptor.getValue().getOrderDate());
+        assertEquals(OffsetDateTime.ofInstant(FIXED_INSTANT, ZoneOffset.UTC), orderCaptor.getValue().getOrderDate());
         assertEquals(1000, orderCaptor.getValue().getTotalPrice());
         assertEquals(2, orderCaptor.getValue().getTotalQuantity());
         assertEquals(10, orderCaptor.getValue().getEarnedPoints());

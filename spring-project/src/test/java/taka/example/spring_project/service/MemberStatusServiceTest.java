@@ -10,7 +10,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,7 +53,7 @@ class MemberStatusServiceTest {
         String orderNumber = "ORD-1";
         OrderHistory order = OrderHistory.builder()
                 .orderNumber(orderNumber)
-                .orderDate(LocalDateTime.now())
+                .orderDate(OffsetDateTime.now(FIXED_CLOCK))
                 .userId(userId)
                 .userName("test-user")
                 .totalPrice(2000)
@@ -74,10 +74,10 @@ class MemberStatusServiceTest {
         assertEquals("Silver", firstResponse.getRank());
         assertEquals("Silver", secondResponse.getRank());
         verify(memberStatusRepository, times(2)).upsertStatus(userId, 20, "Silver");
-        ArgumentCaptor<LocalDateTime> sinceCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+        ArgumentCaptor<OffsetDateTime> sinceCaptor = ArgumentCaptor.forClass(OffsetDateTime.class);
         verify(orderRepository, times(2)).sumEarnedPointsForUserSince(any(), sinceCaptor.capture());
         assertEquals(
-                LocalDateTime.ofInstant(FIXED_INSTANT, ZoneOffset.UTC).minusMonths(3),
+                OffsetDateTime.ofInstant(FIXED_INSTANT, ZoneOffset.UTC).minusMonths(3),
                 sinceCaptor.getAllValues().getFirst());
     }
 
@@ -88,7 +88,7 @@ class MemberStatusServiceTest {
         String orderNumber = "ORD-2";
         OrderHistory order = OrderHistory.builder()
                 .orderNumber(orderNumber)
-                .orderDate(LocalDateTime.now())
+                .orderDate(OffsetDateTime.now(FIXED_CLOCK))
                 .userId(orderUserId)
                 .userName("another-user")
                 .totalPrice(1000)

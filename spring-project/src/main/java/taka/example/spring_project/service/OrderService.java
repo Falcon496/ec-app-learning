@@ -14,8 +14,7 @@ import taka.example.spring_project.repository.OrderHistoryCommandRepository;
 import taka.example.spring_project.repository.OrderRepository;
 
 import java.time.Clock;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -44,7 +43,7 @@ public class OrderService {
     @Transactional
     public Mono<OrderResponse> createOrder(OrderRequest orderRequest) {
         String orderNumber = generateOrderNumber();
-        LocalDateTime orderDateTime = LocalDateTime.now(clock);
+        OffsetDateTime orderDateTime = OffsetDateTime.now(clock);
         Integer totalPrice = calculateTotalPrice(orderRequest.getOrderItems());
         Integer totalQuantity = calculateTotalQuantity(orderRequest.getOrderItems());
 
@@ -156,7 +155,7 @@ public class OrderService {
                 .toList();
 
         return new OrderDto(
-                orderHistory.getOrderDate().atOffset(ZoneOffset.UTC),
+                orderHistory.getOrderDate(),
                 orderHistory.getOrderNumber(),
                 orderHistory.getTotalPrice(),
                 orderHistory.getTotalQuantity(),

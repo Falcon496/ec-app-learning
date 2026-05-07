@@ -10,7 +10,7 @@ import taka.example.spring_project.repository.MemberStatusRepository;
 import taka.example.spring_project.repository.OrderRepository;
 
 import java.time.Clock;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Service
@@ -62,7 +62,7 @@ public class MemberStatusService {
     }
 
     private Mono<Integer> calculateTotalPointsLast3Months(UUID userId) {
-        LocalDateTime threeMonthsAgo = LocalDateTime.now(clock).minusMonths(3);
+        OffsetDateTime threeMonthsAgo = OffsetDateTime.now(clock).minusMonths(3);
         return orderRepository.sumEarnedPointsForUserSince(userId, threeMonthsAgo);
     }
 
