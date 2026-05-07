@@ -1,15 +1,16 @@
 package taka.example.spring_project.service;
 
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
 import taka.example.spring_project.dto.*;
 import taka.example.spring_project.entity.OrderDetails;
 import taka.example.spring_project.entity.OrderHistory;
 import taka.example.spring_project.repository.OrderDetailsRepository;
+import taka.example.spring_project.repository.OrderHistoryCommandRepository;
 import taka.example.spring_project.repository.OrderRepository;
 
 import java.time.LocalDateTime;
@@ -23,15 +24,20 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderDetailsRepository orderDetailsRepository;
+    private final OrderHistoryCommandRepository orderHistoryCommandRepository;
 
     @Autowired
-    public OrderService(OrderRepository orderRepository, OrderDetailsRepository orderDetailsRepository) {
+    public OrderService(
+            OrderRepository orderRepository,
+            OrderDetailsRepository orderDetailsRepository,
+            OrderHistoryCommandRepository orderHistoryCommandRepository) {
         this.orderRepository = orderRepository;
         this.orderDetailsRepository = orderDetailsRepository;
+        this.orderHistoryCommandRepository = orderHistoryCommandRepository;
     }
 
     @Transactional
-    public OrderResponse createOrder(OrderRequest orderRequest) {
+    public Mono<OrderResponse> createOrder(OrderRequest orderRequest) {
         String orderNumber = generateOrderNumber();
         LocalDateTime orderDateTime = LocalDateTime.now();
         Integer totalPrice = calculateTotalPrice(orderRequest.getOrderItems());
@@ -46,23 +52,25 @@ public class OrderService {
                 .totalQuantity(totalQuantity)
                 .earnedPoints(calculatePoints(totalPrice))
                 .build();
-        orderRepository.save(orderHistory);
 
-        for(OrderItem orderItem : orderRequest.getOrderItems()) {
-            OrderDetails orderDetails = OrderDetails.builder()
-                    .orderNumber(orderNumber)
-                    .productId(orderItem.getProductId())
-                    .productName(orderItem.getProductName())
-                    .price(orderItem.getPrice())
-                    .build();
-            orderDetailsRepository.save(orderDetails);
-        }
+        List<OrderDetails> orderDetails = orderRequest.getOrderItems().stream()
+                .map(orderItem -> OrderDetails.builder()
+                        .orderNumber(orderNumber)
+                        .productId(orderItem.getProductId())
+                        .productName(orderItem.getProductName())
+                        .price(orderItem.getPrice())
+                        .build())
+                .toList();
 
-        return new OrderResponse(orderNumber, "SUCCESS", "Order has been successfully created.");
+        return orderHistoryCommandRepository.insert(orderHistory)
+                .thenMany(orderDetailsRepository.saveAll(orderDetails))
+                .then(Mono.just(new OrderResponse(
+                        orderNumber,
+                        "SUCCESS",
+                        "Order has been successfully created.")));
     }
 
     private Integer calculatePoints(Integer totalPrice) {
-//        Calculate 1%
         return totalPrice / 100;
     }
 
@@ -80,15 +88,41 @@ public class OrderService {
         return "ORD-" + UUID.randomUUID().toString();
     }
 
-    public OrderHistoryResponse getOrderHistory(UUID userId,int page, int pageSize) {
+    public Mono<OrderHistoryResponse> getOrderHistory(UUID userId, int page, int pageSize) {
         PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.by(Sort.Direction.DESC, "orderDate"));
-        Page<OrderHistory> orderHistoryPage = orderRepository.findByUserId(userId, pageRequest);
-        List<OrderHistory> orderHistories = orderHistoryPage.getContent();
-        Map<String, List<OrderDetails>> orderDetailsByOrderNumber = orderDetailsRepository.findByOrderNumberIn(
-                        orderHistories.stream()
-                                .map(OrderHistory::getOrderNumber)
-                                .toList())
-                .stream()
+        Mono<List<OrderHistory>> orderHistoriesMono = orderRepository.findByUserId(userId, pageRequest).collectList();
+        Mono<Long> totalElementsMono = orderRepository.countByUserId(userId);
+
+        return orderHistoriesMono.zipWith(totalElementsMono)
+                .flatMap(result -> {
+                    List<OrderHistory> orderHistories = result.getT1();
+                    long totalElements = result.getT2();
+                    if (orderHistories.isEmpty()) {
+                        return Mono.just(buildOrderHistoryResponse(
+                                orderHistories,
+                                List.of(),
+                                pageRequest,
+                                totalElements));
+                    }
+                    List<String> orderNumbers = orderHistories.stream()
+                            .map(OrderHistory::getOrderNumber)
+                            .toList();
+                    return orderDetailsRepository.findByOrderNumberIn(orderNumbers)
+                            .collectList()
+                            .map(orderDetails -> buildOrderHistoryResponse(
+                                    orderHistories,
+                                    orderDetails,
+                                    pageRequest,
+                                    totalElements));
+                });
+    }
+
+    private OrderHistoryResponse buildOrderHistoryResponse(
+            List<OrderHistory> orderHistories,
+            List<OrderDetails> orderDetails,
+            PageRequest pageRequest,
+            long totalElements) {
+        Map<String, List<OrderDetails>> orderDetailsByOrderNumber = orderDetails.stream()
                 .collect(Collectors.groupingBy(OrderDetails::getOrderNumber));
 
         List<OrderDto> orderDtos = orderHistories.stream()
@@ -98,13 +132,17 @@ public class OrderService {
                 .toList();
 
         PageableDto pageableDto = new PageableDto(
-                orderHistoryPage.getNumber(),
-                orderHistoryPage.getSize(),
-                orderHistoryPage.getTotalElements(),
-                orderHistoryPage.getTotalPages()
+                pageRequest.getPageNumber(),
+                pageRequest.getPageSize(),
+                totalElements,
+                calculateTotalPages(totalElements, pageRequest.getPageSize())
         );
 
         return new OrderHistoryResponse(orderDtos, pageableDto);
+    }
+
+    private int calculateTotalPages(long totalElements, int pageSize) {
+        return pageSize == 0 ? 0 : (int) Math.ceil((double) totalElements / pageSize);
     }
 
     private OrderDto convertToOrderDto(OrderHistory orderHistory, List<OrderDetails> orderDetails) {

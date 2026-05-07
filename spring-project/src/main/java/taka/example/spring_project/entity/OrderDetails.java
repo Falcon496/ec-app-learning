@@ -1,46 +1,48 @@
 package taka.example.spring_project.entity;
 
-import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
 
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Entity
-@Table(name = "order_details")
+@Table("order_details")
 public class OrderDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column("id")
     private Long id;
 
     @NonNull
-    @Column(name = "order_number", nullable = false)
+    @Column("order_number")
     private String orderNumber;
 
     @NonNull
-    @Column(name = "product_id", nullable = false)
+    @Column("product_id")
     private Integer productId;
 
     @NonNull
-    @Column(name = "product_name", nullable = false)
+    @Column("product_name")
     private String productName;
 
     @NonNull
-    @Column(name = "price", nullable = false)
+    @Column("price")
     private Integer price;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    @CreationTimestamp
+    @CreatedDate
+    @Column("created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
-    @UpdateTimestamp
+    @LastModifiedDate
+    @Column("updated_at")
     private LocalDateTime updatedAt;
 
 }
