@@ -9,6 +9,7 @@ import taka.example.spring_project.exception.NotFoundException;
 import taka.example.spring_project.repository.MemberStatusRepository;
 import taka.example.spring_project.repository.OrderRepository;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -17,11 +18,16 @@ public class MemberStatusService {
 
     private final MemberStatusRepository memberStatusRepository;
     private final OrderRepository orderRepository;
+    private final Clock clock;
 
     @Autowired
-    public MemberStatusService(MemberStatusRepository memberStatusRepository, OrderRepository orderRepository) {
+    public MemberStatusService(
+            MemberStatusRepository memberStatusRepository,
+            OrderRepository orderRepository,
+            Clock clock) {
         this.memberStatusRepository = memberStatusRepository;
         this.orderRepository = orderRepository;
+        this.clock = clock;
     }
 
     @Transactional
@@ -56,7 +62,7 @@ public class MemberStatusService {
     }
 
     private Mono<Integer> calculateTotalPointsLast3Months(UUID userId) {
-        LocalDateTime threeMonthsAgo = LocalDateTime.now().minusMonths(3);
+        LocalDateTime threeMonthsAgo = LocalDateTime.now(clock).minusMonths(3);
         return orderRepository.sumEarnedPointsForUserSince(userId, threeMonthsAgo);
     }
 
