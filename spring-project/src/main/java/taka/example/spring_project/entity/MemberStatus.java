@@ -7,7 +7,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Table("member_status")
@@ -30,9 +30,9 @@ public class MemberStatus {
 
     @CreatedDate
     @Column("created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @LastModifiedDate
     @Column("updated_at")
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 }

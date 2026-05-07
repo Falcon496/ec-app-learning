@@ -5,13 +5,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDateTime;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
@@ -26,6 +29,10 @@ import taka.example.spring_project.repository.OrderRepository;
 @ExtendWith(MockitoExtension.class)
 class OrderServiceHistoryTest {
 
+    private static final Clock FIXED_CLOCK = Clock.fixed(
+            Instant.parse("2026-05-08T01:23:45Z"),
+            ZoneOffset.UTC);
+
     @Mock
     private OrderRepository orderRepository;
 
@@ -35,8 +42,16 @@ class OrderServiceHistoryTest {
     @Mock
     private OrderHistoryCommandRepository orderHistoryCommandRepository;
 
-    @InjectMocks
     private OrderService orderService;
+
+    @BeforeEach
+    void setUp() {
+        orderService = new OrderService(
+                orderRepository,
+                orderDetailsRepository,
+                orderHistoryCommandRepository,
+                FIXED_CLOCK);
+    }
 
     @Test
     @SuppressWarnings("unchecked")
@@ -56,6 +71,7 @@ class OrderServiceHistoryTest {
         OrderHistoryResponse response = orderService.getOrderHistory(userId, 0, 10).block();
 
         assertEquals(2, response.getContent().size());
+        assertEquals(firstOrder.getOrderDate(), response.getContent().get(0).getOrderDate());
         assertEquals(1, response.getContent().get(0).getOrderItems().size());
         assertEquals(1, response.getContent().get(1).getOrderItems().size());
         ArgumentCaptor<List<String>> captor = ArgumentCaptor.forClass(List.class);
@@ -66,7 +82,7 @@ class OrderServiceHistoryTest {
     private OrderHistory orderHistory(String orderNumber, UUID userId) {
         return OrderHistory.builder()
                 .orderNumber(orderNumber)
-                .orderDate(LocalDateTime.now())
+                .orderDate(OffsetDateTime.now(FIXED_CLOCK))
                 .userId(userId)
                 .userName("test-user")
                 .totalPrice(1000)

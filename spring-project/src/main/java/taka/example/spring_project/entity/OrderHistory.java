@@ -11,7 +11,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 
@@ -27,7 +27,7 @@ public class OrderHistory {
     private String orderNumber;
 
     @Column("order_date")
-    private LocalDateTime orderDate;
+    private OffsetDateTime orderDate;
 
     @Column("user_id")
     private UUID userId;
@@ -46,9 +46,9 @@ public class OrderHistory {
 
     @CreatedDate
     @Column("created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @LastModifiedDate
     @Column("updated_at")
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 }
