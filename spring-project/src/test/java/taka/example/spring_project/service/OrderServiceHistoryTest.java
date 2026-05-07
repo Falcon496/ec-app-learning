@@ -71,6 +71,7 @@ class OrderServiceHistoryTest {
         OrderHistoryResponse response = orderService.getOrderHistory(userId, 0, 10).block();
 
         assertEquals(2, response.getContent().size());
+        assertEquals(firstOrder.getOrderDate().atOffset(ZoneOffset.UTC), response.getContent().get(0).getOrderDate());
         assertEquals(1, response.getContent().get(0).getOrderItems().size());
         assertEquals(1, response.getContent().get(1).getOrderItems().size());
         ArgumentCaptor<List<String>> captor = ArgumentCaptor.forClass(List.class);

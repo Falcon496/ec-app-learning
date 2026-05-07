@@ -15,6 +15,7 @@ import taka.example.spring_project.repository.OrderRepository;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -155,7 +156,7 @@ public class OrderService {
                 .toList();
 
         return new OrderDto(
-                orderHistory.getOrderDate().toString(),
+                orderHistory.getOrderDate().atOffset(ZoneOffset.UTC),
                 orderHistory.getOrderNumber(),
                 orderHistory.getTotalPrice(),
                 orderHistory.getTotalQuantity(),
