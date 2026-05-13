@@ -13,8 +13,7 @@ import taka.example.spring_project.repository.OrderDetailsRepository;
 import taka.example.spring_project.repository.OrderHistoryCommandRepository;
 import taka.example.spring_project.repository.OrderRepository;
 
-import java.time.Clock;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -26,24 +25,21 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderDetailsRepository orderDetailsRepository;
     private final OrderHistoryCommandRepository orderHistoryCommandRepository;
-    private final Clock clock;
 
     @Autowired
     public OrderService(
             OrderRepository orderRepository,
             OrderDetailsRepository orderDetailsRepository,
-            OrderHistoryCommandRepository orderHistoryCommandRepository,
-            Clock clock) {
+            OrderHistoryCommandRepository orderHistoryCommandRepository) {
         this.orderRepository = orderRepository;
         this.orderDetailsRepository = orderDetailsRepository;
         this.orderHistoryCommandRepository = orderHistoryCommandRepository;
-        this.clock = clock;
     }
 
     @Transactional
     public Mono<OrderResponse> createOrder(OrderRequest orderRequest) {
         String orderNumber = generateOrderNumber();
-        OffsetDateTime orderDateTime = OffsetDateTime.now(clock);
+        LocalDateTime orderDateTime = LocalDateTime.now();
         Integer totalPrice = calculateTotalPrice(orderRequest.getOrderItems());
         Integer totalQuantity = calculateTotalQuantity(orderRequest.getOrderItems());
 
@@ -155,7 +151,7 @@ public class OrderService {
                 .toList();
 
         return new OrderDto(
-                orderHistory.getOrderDate(),
+                orderHistory.getOrderDate().toString(),
                 orderHistory.getOrderNumber(),
                 orderHistory.getTotalPrice(),
                 orderHistory.getTotalQuantity(),

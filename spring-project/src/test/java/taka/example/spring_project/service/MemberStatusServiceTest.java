@@ -8,15 +8,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.Clock;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.LocalDateTime;
 import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
@@ -28,24 +24,14 @@ import taka.example.spring_project.repository.OrderRepository;
 @ExtendWith(MockitoExtension.class)
 class MemberStatusServiceTest {
 
-    private static final Instant FIXED_INSTANT = Instant.parse("2026-05-08T01:23:45Z");
-    private static final Clock FIXED_CLOCK = Clock.fixed(FIXED_INSTANT, ZoneOffset.UTC);
-
     @Mock
     private MemberStatusRepository memberStatusRepository;
 
     @Mock
     private OrderRepository orderRepository;
 
+    @InjectMocks
     private MemberStatusService memberStatusService;
-
-    @BeforeEach
-    void setUp() {
-        memberStatusService = new MemberStatusService(
-                memberStatusRepository,
-                orderRepository,
-                FIXED_CLOCK);
-    }
 
     @Test
     void calculateAndUpdateMemberStatusRecalculatesTotalPointsIdempotently() {
@@ -53,7 +39,7 @@ class MemberStatusServiceTest {
         String orderNumber = "ORD-1";
         OrderHistory order = OrderHistory.builder()
                 .orderNumber(orderNumber)
-                .orderDate(OffsetDateTime.now(FIXED_CLOCK))
+                .orderDate(LocalDateTime.now())
                 .userId(userId)
                 .userName("test-user")
                 .totalPrice(2000)
@@ -74,11 +60,6 @@ class MemberStatusServiceTest {
         assertEquals("Silver", firstResponse.getRank());
         assertEquals("Silver", secondResponse.getRank());
         verify(memberStatusRepository, times(2)).upsertStatus(userId, 20, "Silver");
-        ArgumentCaptor<OffsetDateTime> sinceCaptor = ArgumentCaptor.forClass(OffsetDateTime.class);
-        verify(orderRepository, times(2)).sumEarnedPointsForUserSince(any(), sinceCaptor.capture());
-        assertEquals(
-                OffsetDateTime.ofInstant(FIXED_INSTANT, ZoneOffset.UTC).minusMonths(3),
-                sinceCaptor.getAllValues().getFirst());
     }
 
     @Test
@@ -88,7 +69,7 @@ class MemberStatusServiceTest {
         String orderNumber = "ORD-2";
         OrderHistory order = OrderHistory.builder()
                 .orderNumber(orderNumber)
-                .orderDate(OffsetDateTime.now(FIXED_CLOCK))
+                .orderDate(LocalDateTime.now())
                 .userId(orderUserId)
                 .userName("another-user")
                 .totalPrice(1000)

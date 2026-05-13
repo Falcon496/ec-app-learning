@@ -9,7 +9,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import taka.example.spring_project.entity.OrderHistory;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Repository
@@ -29,5 +29,5 @@ public interface OrderRepository extends ReactiveCrudRepository<OrderHistory, St
             WHERE user_id = :userId
               AND order_date >= :since
             """)
-    Mono<Integer> sumEarnedPointsForUserSince(@Param("userId") UUID userId, @Param("since") OffsetDateTime since);
+    Mono<Integer> sumEarnedPointsForUserSince(@Param("userId") UUID userId, @Param("since") LocalDateTime since);
 }

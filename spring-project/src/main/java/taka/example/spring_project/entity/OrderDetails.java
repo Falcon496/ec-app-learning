@@ -7,7 +7,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -39,10 +39,10 @@ public class OrderDetails {
 
     @CreatedDate
     @Column("created_at")
-    private OffsetDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @LastModifiedDate
     @Column("updated_at")
-    private OffsetDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
 }
