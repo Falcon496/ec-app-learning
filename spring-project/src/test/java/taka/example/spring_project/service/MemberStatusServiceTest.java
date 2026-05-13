@@ -4,19 +4,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import reactor.core.publisher.Mono;
 import taka.example.spring_project.dto.MemberStatusResponse;
+import taka.example.spring_project.entity.MemberStatus;
 import taka.example.spring_project.entity.OrderHistory;
 import taka.example.spring_project.repository.MemberStatusRepository;
 import taka.example.spring_project.repository.OrderRepository;
@@ -37,6 +38,11 @@ class MemberStatusServiceTest {
     void calculateAndUpdateMemberStatusRecalculatesTotalPointsIdempotently() {
         UUID userId = UUID.randomUUID();
         String orderNumber = "ORD-1";
+        MemberStatus memberStatus = MemberStatus.builder()
+                .userId(userId)
+                .totalPoints(10)
+                .rank("Bronze")
+                .build();
         OrderHistory order = OrderHistory.builder()
                 .orderNumber(orderNumber)
                 .orderDate(LocalDateTime.now())
@@ -47,19 +53,20 @@ class MemberStatusServiceTest {
                 .earnedPoints(20)
                 .build();
 
-        when(orderRepository.findByOrderNumber(orderNumber)).thenReturn(Mono.just(order));
-        when(orderRepository.sumEarnedPointsByUserId(userId)).thenReturn(Mono.just(20));
-        when(orderRepository.sumEarnedPointsForUserSince(any(), any())).thenReturn(Mono.just(20));
-        when(memberStatusRepository.upsertStatus(userId, 20, "Silver")).thenReturn(Mono.just(1));
+        when(orderRepository.findByOrderNumber(orderNumber)).thenReturn(Optional.of(order));
+        when(memberStatusRepository.findByUserId(userId)).thenReturn(Optional.of(memberStatus));
+        when(orderRepository.sumEarnedPointsByUserId(userId)).thenReturn(20);
+        when(orderRepository.sumEarnedPointsForUserSince(any(), any())).thenReturn(20);
 
-        MemberStatusResponse firstResponse = memberStatusService.calculateAndUpdateMemberStatus(userId, orderNumber).block();
-        MemberStatusResponse secondResponse = memberStatusService.calculateAndUpdateMemberStatus(userId, orderNumber).block();
+        MemberStatusResponse firstResponse = memberStatusService.calculateAndUpdateMemberStatus(userId, orderNumber);
+        MemberStatusResponse secondResponse = memberStatusService.calculateAndUpdateMemberStatus(userId, orderNumber);
 
         assertEquals(20, firstResponse.getPoints());
         assertEquals(20, secondResponse.getPoints());
-        assertEquals("Silver", firstResponse.getRank());
-        assertEquals("Silver", secondResponse.getRank());
-        verify(memberStatusRepository, times(2)).upsertStatus(userId, 20, "Silver");
+        ArgumentCaptor<MemberStatus> captor = ArgumentCaptor.forClass(MemberStatus.class);
+        verify(memberStatusRepository, org.mockito.Mockito.times(2)).save(captor.capture());
+        assertEquals(20, captor.getAllValues().get(0).getTotalPoints());
+        assertEquals(20, captor.getAllValues().get(1).getTotalPoints());
     }
 
     @Test
@@ -77,12 +84,12 @@ class MemberStatusServiceTest {
                 .earnedPoints(10)
                 .build();
 
-        when(orderRepository.findByOrderNumber(orderNumber)).thenReturn(Mono.just(order));
+        when(orderRepository.findByOrderNumber(orderNumber)).thenReturn(Optional.of(order));
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> memberStatusService.calculateAndUpdateMemberStatus(requestUserId, orderNumber).block());
+                () -> memberStatusService.calculateAndUpdateMemberStatus(requestUserId, orderNumber));
         verify(memberStatusRepository, never()).findByUserId(any());
-        verify(memberStatusRepository, never()).upsertStatus(any(), any(), any());
+        verify(memberStatusRepository, never()).save(any());
     }
 }

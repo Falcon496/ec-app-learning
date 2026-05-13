@@ -1,54 +1,51 @@
 package taka.example.spring_project.entity;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table("order_history")
+@Entity
+@Table(name = "order_history")
 public class OrderHistory {
     @Id
-    @Column("order_number")
+    @Column(name = "order_number", nullable = false)
     private String orderNumber;
 
-    @Column("order_date")
+    @Column(name = "order_date", nullable = false)
     private LocalDateTime orderDate;
 
-    @Column("user_id")
+    @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    @Column("user_name")
+    @Column(name = "user_name", nullable = false)
     private String userName;
 
-    @Column("total_price")
+    @Column(name = "total_price", nullable = false)
     private Integer totalPrice;
 
-    @Column("total_quantity")
+    @Column(name = "total_quantity", nullable = false)
     private Integer totalQuantity;
 
-    @Column("earned_points")
+    @Column(name = "earned_points", nullable = false)
     private Integer earnedPoints;
 
-    @CreatedDate
-    @Column("created_at")
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
-    @LastModifiedDate
-    @Column("updated_at")
+    @Column(name = "updated_at", nullable = false)
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 }

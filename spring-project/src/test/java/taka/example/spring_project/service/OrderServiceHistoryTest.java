@@ -14,13 +14,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import taka.example.spring_project.dto.OrderHistoryResponse;
 import taka.example.spring_project.entity.OrderDetails;
 import taka.example.spring_project.entity.OrderHistory;
 import taka.example.spring_project.repository.OrderDetailsRepository;
-import taka.example.spring_project.repository.OrderHistoryCommandRepository;
 import taka.example.spring_project.repository.OrderRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,9 +31,6 @@ class OrderServiceHistoryTest {
     @Mock
     private OrderDetailsRepository orderDetailsRepository;
 
-    @Mock
-    private OrderHistoryCommandRepository orderHistoryCommandRepository;
-
     @InjectMocks
     private OrderService orderService;
 
@@ -44,16 +40,16 @@ class OrderServiceHistoryTest {
         UUID userId = UUID.randomUUID();
         OrderHistory firstOrder = orderHistory("ORD-1", userId);
         OrderHistory secondOrder = orderHistory("ORD-2", userId);
+        PageRequest pageRequest = PageRequest.of(0, 10);
 
         when(orderRepository.findByUserId(any(), any()))
-                .thenReturn(Flux.just(firstOrder, secondOrder));
-        when(orderRepository.countByUserId(userId)).thenReturn(Mono.just(2L));
+                .thenReturn(new PageImpl<>(List.of(firstOrder, secondOrder), pageRequest, 2));
         when(orderDetailsRepository.findByOrderNumberIn(List.of("ORD-1", "ORD-2")))
-                .thenReturn(Flux.just(
+                .thenReturn(List.of(
                         orderDetails("ORD-1", 1),
                         orderDetails("ORD-2", 2)));
 
-        OrderHistoryResponse response = orderService.getOrderHistory(userId, 0, 10).block();
+        OrderHistoryResponse response = orderService.getOrderHistory(userId, 0, 10);
 
         assertEquals(2, response.getContent().size());
         assertEquals(1, response.getContent().get(0).getOrderItems().size());

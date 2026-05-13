@@ -1,16 +1,16 @@
 package taka.example.spring_project.repository;
 
-import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import reactor.core.publisher.Flux;
 import taka.example.spring_project.entity.OrderDetails;
 
-import java.util.Collection;
+import java.util.List;
 
 @Repository
-public interface OrderDetailsRepository extends ReactiveCrudRepository<OrderDetails, Long> {
+public interface OrderDetailsRepository extends JpaRepository<OrderDetails, Long> {
 
-    Flux<OrderDetails> findByOrderNumber(String orderNumber);
+    // Add findByOrderNumber method to find order details by order number
+    List<OrderDetails> findByOrderNumber(String orderNumber);
 
-    Flux<OrderDetails> findByOrderNumberIn(Collection<String> orderNumbers);
+    List<OrderDetails> findByOrderNumberIn(List<String> orderNumbers);
 }

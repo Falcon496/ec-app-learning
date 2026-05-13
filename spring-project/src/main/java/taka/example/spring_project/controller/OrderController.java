@@ -8,7 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 import taka.example.spring_project.dto.OrderHistoryResponse;
 import taka.example.spring_project.dto.OrderRequest;
 import taka.example.spring_project.dto.OrderResponse;
@@ -29,17 +28,17 @@ public class OrderController {
     }
 
     @PostMapping
-    public Mono<ResponseEntity<OrderResponse>> createOrder(@Valid @RequestBody OrderRequest orderRequest) {
-        return orderService.createOrder(orderRequest)
-                .map(orderResponse -> ResponseEntity.status(HttpStatus.CREATED).body(orderResponse));
+    public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody OrderRequest orderRequest) {
+        OrderResponse orderResponse = orderService.createOrder(orderRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(orderResponse);
     }
 
     @GetMapping
-    public Mono<ResponseEntity<OrderHistoryResponse>> getOrderHistory(
+    public ResponseEntity<OrderHistoryResponse> getOrderHistory(
             @RequestParam UUID userId,
             @Min(0) @RequestParam(defaultValue = "0") int page,
             @Min(1) @Max(100) @RequestParam(defaultValue = "10") int size){
-        return orderService.getOrderHistory(userId, page, size)
-                .map(ResponseEntity::ok);
+        OrderHistoryResponse response = orderService.getOrderHistory(userId, page, size);
+        return ResponseEntity.ok(response);
     }
 }

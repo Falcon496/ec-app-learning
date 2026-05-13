@@ -1,16 +1,18 @@
 package taka.example.spring_project.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Table("member_status")
+@Entity
+@Table(name = "member_status")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,20 +21,20 @@ import java.util.UUID;
 public class MemberStatus {
 
     @Id
-    @Column("user_id")
+    @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    @Column("total_points")
+    @Column(name = "total_points", nullable = false)
     private Integer totalPoints;
 
-    @Column("rank")
+    @Column(name = "rank", nullable = false)
     private String rank;
 
-    @CreatedDate
-    @Column("created_at")
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @LastModifiedDate
-    @Column("updated_at")
+    @UpdateTimestamp
+    @Column(name = "updated_at",  nullable = false)
     private LocalDateTime updatedAt;
 }
